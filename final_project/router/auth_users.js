@@ -44,7 +44,7 @@ regd_users.post("/login", (req,res) => {
 
   // Check if both username and password are provided
   if (!username || !password) {
-    return res.status(404).json({ message: "Error logging in" });
+    return res.status(404).json({ message: "Error logging in: no username or password" });
   }
   // Authenticate user
   if (authenticatedUser(username, password)) {
@@ -56,7 +56,7 @@ regd_users.post("/login", (req,res) => {
     req.session.authorization = {
         accessToken, username
     }
-    return res.status(200).send("User successfully logged in");
+    return res.status(200).send("User logged in");
     } else { return res.status(208).json({ message: "Invalid Login. Check username and password" }); }
 });
 
@@ -65,7 +65,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
     const Review = req.body.review;
     const ISBN = req.params.isbn;
-    const username = req.session.username;
+    const username = req.session.authorization.username;
     // Check if user is logged in and has valid access token
     if (req.session.authorization) {
         let token = req.session.authorization['accessToken'];
@@ -74,7 +74,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
             if (!err) {
                 if (books[ISBN]) {
                     books[ISBN].reviews[username] = Review;
-                    res.status(200).json({ message: "Review updated successfully. Reviews: "+ books[ISBN].reviews });
+                    res.status(200).json({ message: "Review updated by "+username+". Reviews: "+ JSON.stringify(books[ISBN].reviews, null, 4) });
                 } else {
                     res.status(404).json({ message: "No Book found" });
                 }
@@ -91,25 +91,12 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 regd_users.delete("/auth/review/:isbn", (req, res) => {
   //Delete book review
   const ISBN = req.params.isbn;
+  const user = req.session.authorization.username;
   // Check if user is logged in and has valid access token
-  if (req.session.authorization) {
-      let token = req.session.authorization['accessToken'];
-      // Verify JWT token
-      jwt.verify(token, "access", (err, user) => {
-          if (!err) {
-              if (books[ISBN]) {
-                  delete books[ISBN].reviews[user];
-                  res.status(200).json({ message: "Review Deleted. Reviews: "+ books[ISBN].reviews });
-              } else {
-                  res.status(404).json({ message: "No Book found" });
-              }
-          } else {
-              return res.status(403).json({ message: "User not authenticated" });
-          }
-      });
-  } else {
-      return res.status(403).json({ message: "User not logged in" });
-  }
+    if (books[ISBN]) {
+        delete books[ISBN].reviews[user];
+        res.status(200).json({ message: "Review by "+user+" Deleted. Reviews: "+ JSON.stringify(books[ISBN].reviews, null, 4) });
+    } else { res.status(404).json({ message: "No Book found" }); }
 });
 
 module.exports.authenticated = regd_users;
