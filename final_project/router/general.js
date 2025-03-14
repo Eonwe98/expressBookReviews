@@ -2,6 +2,7 @@ const express = require('express');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
+let fs = require('fs');
 const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
@@ -26,14 +27,48 @@ public_users.post("/register", (req,res) => {
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
-  res.send(JSON.stringify(books, null, 4));
+  const bookCall = new Promise((resolve, reject) => {
+    try {
+        const bookscalled = fs.readFileSync('router/booksdb.js');
+        const bookscalledEdit = bookscalled.slice(20, bookscalled.length-26);
+        setTimeout(() => resolve(bookscalledEdit), 600);
+    } catch (err) {
+        reject(err);
+    }
+  });
+
+  bookCall.then(
+    (bookscalledEdit) => res.status(200).json("Currently held books: "+bookscalledEdit),
+
+    (err) => res.status(404).json("Error books: "+ err)
+    );
+  //  res.send("Currently held books: "+JSON.stringify(books, null, 4));
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
   const ISBN = req.params.isbn;
-  res.send(JSON.stringify(books[ISBN], null, 4));
+  const isbnInc = 1 + Number(ISBN);
+  const isbnIncS = isbnInc.toString();
+
+  const isbnCall = new Promise((resolve, reject) => {
+    try {
+        const bookbyisbn = fs.readFileSync('router/booksdb.js');
+        let bookbyisbnEdit = bookbyisbn.slice(20, bookbyisbn.length-26);
+        bookbyisbnEdit = bookbyisbnEdit.subarray(bookbyisbnEdit.indexOf(ISBN), bookbyisbnEdit.indexOf(isbnIncS));
+        setTimeout(() => resolve(bookbyisbnEdit), 600);
+    } catch (err) {
+        reject(err);
+    }
+  });
+
+  isbnCall.then(
+    (bookbyisbnEdit) => res.status(200).json("Book by ISBN: "+bookbyisbnEdit),
+
+    (err) => res.status(404).json("Error ISBN: "+ err)
+    );
+  //res.send(JSON.stringify(books[ISBN], null, 4));
  });
   
 // Get book details based on author
