@@ -75,6 +75,26 @@ public_users.get('/isbn/:isbn',function (req, res) {
 public_users.get('/author/:author',function (req, res) {
   //Write your code here
   const Author = req.params.author.replace(/_/g, ' ');
+
+  const authorCall = new Promise((resolve, reject) => {
+    try {
+        setTimeout(() =>  {
+            const bookbyauthorFilter = JSON.stringify(Object.values(books).filter((a) => a.author === Author), null, 4)
+            resolve(bookbyauthorFilter), 600
+        });  
+    } catch (err) {
+        reject(err);
+    }
+  });
+
+  authorCall.then(
+    (bookbyauthorFilter) => res.status(200).json("Book by "+Author+": "+bookbyauthorFilter),
+
+    (err) => res.status(404).json("Index failed: Author "+ err)
+    );
+
+  /*
+  const Author = req.params.author.replace(/_/g, ' ');
   let AuthISBN = 0;
   let i = 1;
   let Leng = Object.keys(books).length;
@@ -90,11 +110,31 @@ public_users.get('/author/:author',function (req, res) {
   } else {
     return res.status(300).json({message: "Index failed: Author"+ Leng});
   }
+  */
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
+  const Title = req.params.title.replace(/_/g, ' ');
+
+  const titleCall = new Promise((resolve, reject) => {
+    try {
+        setTimeout(() =>  {
+            const bookbytitleFilter = JSON.stringify(Object.values(books).filter((a) => a.title === Title), null, 4)
+            resolve(bookbytitleFilter), 600
+        });  
+    } catch (err) {
+        reject(err);
+    }
+  });
+
+  titleCall.then(
+    (bookbytitleFilter) => res.status(200).json("Book by "+Author+": "+bookbytitleFilter),
+
+    (err) => res.status(404).json("Index failed: Title "+ err)
+    );
+  /*
   const Title = req.params.title.replace(/_/g, ' ');
   let AuthISBN = 0;
   let i = 1;
@@ -111,6 +151,7 @@ public_users.get('/title/:title',function (req, res) {
   } else {
     return res.status(300).json({message: "Index failed: Title "});
   }
+  */
 });
 
 //  Get book review
